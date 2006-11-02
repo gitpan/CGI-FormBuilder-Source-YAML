@@ -1,4 +1,6 @@
 
+
+
 NAME
        CGI::FormBuilder::Source::YAML - Initialize FormBuilder from YAML file
 
@@ -108,7 +110,7 @@ SEE ALSO
        CGI::FormBuilder, CGI::FormBuilder::Source
 
 REVISION
-       $Id: YAML.pm 1 2006-11-01 16:00:00Z markle $
+       $Id: YAML.pm 2 2006-11-02 16:00:00Z markle $
 
 AUTHOR
        Copyright (c) 2006 Mark Hedges <hedges@ucsd.edu>. All rights reserved.
@@ -117,5 +119,6 @@ LICENSE
        This module is free software; you may copy it under terms of the Perl
        license (GNU General Public License or Artistic License.)
        http://www.opensource.org/licenses/index.html
+
 
 

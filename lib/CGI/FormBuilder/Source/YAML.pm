@@ -8,8 +8,8 @@ local $YAML::Syck::LoadCode = 1;
 
 use CGI::FormBuilder::Util;
 
-our $REVISION = do { (my $r='$Revision: 1 $') =~ s/\D+//g; $r };
-our $VERSION = '0.0001';
+our $REVISION = do { (my $r='$Revision: 2 $') =~ s/\D+//g; $r };
+our $VERSION = '1.0002';
 
 sub new {
     my $self  = shift;
@@ -200,7 +200,7 @@ L<CGI::FormBuilder>, L<CGI::FormBuilder::Source>
 
 =head1 REVISION
 
-$Id: YAML.pm 1 2006-11-01 16:00:00Z markle $
+$Id: YAML.pm 2 2006-11-02 16:00:00Z markle $
 
 =head1 AUTHOR
 
