@@ -4,12 +4,11 @@ use strict;
 use warnings;
 
 use YAML::Syck;
-local $YAML::Syck::LoadCode = 1;
 
 use CGI::FormBuilder::Util;
 
-our $REVISION = do { (my $r='$Revision: 2 $') =~ s/\D+//g; $r };
-our $VERSION = '1.0002';
+our $REVISION = do { (my $r='$Revision: 3 $') =~ s/\D+//g; $r };
+our $VERSION = '1.0003';
 
 sub new {
     my $self  = shift;
@@ -21,6 +20,10 @@ sub new {
 sub parse {
     my $self = shift;
     my $file = shift || $self->{source};
+
+    local $YAML::Syck::LoadCode = 1;
+  # local $YAML::Syck::UseCode = 1;
+  # local $YAML::Syck::DumpCode = 1;
 
     $CGI::FormBuilder::Util::DEBUG ||= $self->{debug} if ref $self;
 
@@ -36,6 +39,9 @@ sub parse {
 
     # whork in the function refs:
     $self->_assign_references($formopt, 1) if ref $self;
+
+  # my %lame = ( %{$formopt} );
+  # debug 2, "YAML form definition is:", Dump(\%lame);
 
     return wantarray ? %{$formopt} : $formopt;
 }
@@ -69,7 +75,9 @@ sub _assign_references {
                 LEVELUP:
                 while (my $pkg = caller($l++)) {
                     debug 2, "looking up at lev $l for ref '$refstr' in '$pkg'";
-                    eval "\$subref = \\$reftype$pkg\::$refstr";
+                    my $evalstr = "\$subref = \\$reftype$pkg\::$refstr";
+                    debug 2, "eval '$evalstr'";
+                    eval $evalstr;
                     if (!$@) {
                         $node = $subref;
                         last LEVELUP;
@@ -113,11 +121,25 @@ fully specify the entire data structure -- the module doesn't
 do any fancy processing.  
 
 LoadCode is enabled, so you can use YAML syntax for defining subroutines.
+This is convenient if you have a function that generates validation
+subrefs, for example, I have one that can check profanity using Regexp::Common.
+
+ validate:
+    myfield:    
+        javascript: /^[\s\S]{2,50}$/
+        perl: !!perl/code: >-
+            {   My::Funk::fb_perl_validate({ 
+                    min         => 2, 
+                    max         => 50, 
+                    profanity   => 'check' 
+                })->(shift);
+            }
+
 
 Well there is one exception to the "pure YAML syntax", you can specify 
-references as string values that start with \&, \$, \@, or \%.  If you have
-a full direct package reference, it will look there, but it must already
-be loaded.  Otherwise
+references as string values that start with \&, \$, \@, or \% in the
+same way you can with CGI::FormBuilder::Source::File.  If you have
+a full direct package reference, it will look there, otherwise
 it will traverse up the caller stack and take the first it finds.
 
 =head1 EXAMPLE
@@ -200,7 +222,7 @@ L<CGI::FormBuilder>, L<CGI::FormBuilder::Source>
 
 =head1 REVISION
 
-$Id: YAML.pm 2 2006-11-02 16:00:00Z markle $
+$Id: YAML.pm 3 2006-11-02 17:00:00Z markle $
 
 =head1 AUTHOR
 

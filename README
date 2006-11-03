@@ -1,6 +1,4 @@
 
-
-
 NAME
        CGI::FormBuilder::Source::YAML - Initialize FormBuilder from YAML file
 
@@ -26,13 +24,26 @@ DESCRIPTION
        ing.
 
        LoadCode is enabled, so you can use YAML syntax for defining subrou-
-       tines.
+       tines.  This is convenient if you have a function that generates vali-
+       dation subrefs, for example, I have one that can check profanity using
+       Regexp::Common.
+
+        validate:
+           myfield:
+               javascript: /^[\s\S]{2,50}$/
+               perl: !!perl/code: >-
+                   {   My::Funk::fb_perl_validate({
+                           min         => 2,
+                           max         => 50,
+                           profanity   => 'check'
+                       })->(shift);
+                   }
 
        Well there is one exception to the "pure YAML syntax", you can specify
-       references as string values that start with \&, \$, \@, or \%.  If you
-       have a full direct package reference, it will look there, but it must
-       already be loaded.  Otherwise it will traverse up the caller stack and
-       take the first it finds.
+       references as string values that start with \&, \$, \@, or \% in the
+       same way you can with CGI::FormBuilder::Source::File.  If you have a
+       full direct package reference, it will look there, otherwise it will
+       traverse up the caller stack and take the first it finds.
 
 EXAMPLE
         method:     GET
@@ -110,7 +121,7 @@ SEE ALSO
        CGI::FormBuilder, CGI::FormBuilder::Source
 
 REVISION
-       $Id: YAML.pm 2 2006-11-02 16:00:00Z markle $
+       $Id: YAML.pm 3 2006-11-02 16:00:00Z markle $
 
 AUTHOR
        Copyright (c) 2006 Mark Hedges <hedges@ucsd.edu>. All rights reserved.
@@ -119,6 +130,5 @@ LICENSE
        This module is free software; you may copy it under terms of the Perl
        license (GNU General Public License or Artistic License.)
        http://www.opensource.org/licenses/index.html
-
 
 
