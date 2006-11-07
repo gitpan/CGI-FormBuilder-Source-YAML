@@ -7,8 +7,8 @@ use YAML::Syck;
 
 use CGI::FormBuilder::Util;
 
-our $REVISION = do { (my $r='$Revision: 3 $') =~ s/\D+//g; $r };
-our $VERSION = '1.0003';
+our $REVISION = do { (my $r='$Revision: 4 $') =~ s/\D+//g; $r };
+our $VERSION = '1.0004';
 
 sub new {
     my $self  = shift;
@@ -64,8 +64,8 @@ sub _assign_references {
             if ($refstr =~ m{ :: }xms) {
                 # already know where it is.  assign it.
                 my $subref = undef;
-                debug 2, "assigning direct pkg ref for '$refstr'";
-                eval "\$subref = \\$refstr";
+                debug 1, "assigning direct pkg ref for '$reftype$refstr'";
+                eval "\$subref = \\$reftype$refstr";
                 $node = $subref;
             }
             else {
@@ -74,9 +74,9 @@ sub _assign_references {
                 my $subref = undef;
                 LEVELUP:
                 while (my $pkg = caller($l++)) {
-                    debug 2, "looking up at lev $l for ref '$refstr' in '$pkg'";
+                    debug 1, "looking up at lev $l for ref '$refstr' in '$pkg'";
                     my $evalstr = "\$subref = \\$reftype$pkg\::$refstr";
-                    debug 2, "eval '$evalstr'";
+                    debug 1, "eval '$evalstr'";
                     eval $evalstr;
                     if (!$@) {
                         $node = $subref;
@@ -85,7 +85,7 @@ sub _assign_references {
                 }
             }
 
-            debug 2, "assgnd ref '$node' for '$reftype$refstr'";
+            debug 1, "assgnd ref '$node' for '$reftype$refstr'";
         }
     }
     return;
@@ -222,7 +222,7 @@ L<CGI::FormBuilder>, L<CGI::FormBuilder::Source>
 
 =head1 REVISION
 
-$Id: YAML.pm 3 2006-11-02 17:00:00Z markle $
+$Id: YAML.pm 4 2006-11-07 17:00:00Z markle $
 
 =head1 AUTHOR
 
