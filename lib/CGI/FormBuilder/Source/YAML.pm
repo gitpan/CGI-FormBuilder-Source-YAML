@@ -7,8 +7,8 @@ use YAML::Syck;
 
 use CGI::FormBuilder::Util;
 
-our $REVISION = do { (my $r='$Revision: 4 $') =~ s/\D+//g; $r };
-our $VERSION = '1.0004';
+our $REVISION = do { (my $r='$Revision: 5 $') =~ s/\D+//g; $r };
+our $VERSION = '1.0005';
 
 sub new {
     my $self  = shift;
@@ -22,8 +22,8 @@ sub parse {
     my $file = shift || $self->{source};
 
     local $YAML::Syck::LoadCode = 1;
-  # local $YAML::Syck::UseCode = 1;
-  # local $YAML::Syck::DumpCode = 1;
+    local $YAML::Syck::UseCode = 1;
+    local $YAML::Syck::DumpCode = 1;
 
     $CGI::FormBuilder::Util::DEBUG ||= $self->{debug} if ref $self;
 
@@ -40,8 +40,8 @@ sub parse {
     # whork in the function refs:
     $self->_assign_references($formopt, 1) if ref $self;
 
-  # my %lame = ( %{$formopt} );
-  # debug 2, "YAML form definition is:", Dump(\%lame);
+    my %lame = ( %{$formopt} );
+    debug 1, "YAML form definition is:", Dump(\%lame);
 
     return wantarray ? %{$formopt} : $formopt;
 }
@@ -57,35 +57,56 @@ sub _assign_references {
         if ($ref eq 'HASH') {
             $self->_assign_references($node, $stacklevel);
         }
-        elsif ( (!$ref) && $node =~ m{ \A \\ ([&$%@]) (.*) \z }xms ) {
+        elsif (!$ref) {
 
-            my ($reftype, $refstr) = ($1, $2);
+            debug 1, "node is '$node'\n";
+
+            if ( $node =~ m{ \A \\ ([&\$%@]) (.*) \z }xms ) {
+
+                my ($reftype, $refstr) = ($1, $2);
            
-            if ($refstr =~ m{ :: }xms) {
-                # already know where it is.  assign it.
-                my $subref = undef;
-                debug 1, "assigning direct pkg ref for '$reftype$refstr'";
-                eval "\$subref = \\$reftype$refstr";
-                $node = $subref;
-            }
-            else {
-
-                my $l = $stacklevel;
-                my $subref = undef;
-                LEVELUP:
-                while (my $pkg = caller($l++)) {
-                    debug 1, "looking up at lev $l for ref '$refstr' in '$pkg'";
-                    my $evalstr = "\$subref = \\$reftype$pkg\::$refstr";
-                    debug 1, "eval '$evalstr'";
-                    eval $evalstr;
-                    if (!$@) {
-                        $node = $subref;
-                        last LEVELUP;
+                if ($refstr =~ m{ :: }xms) {
+                    # already know where it is.  assign it.
+                    my $subref = undef;
+                    debug 1, "assigning direct pkg ref for '$reftype$refstr'";
+                    eval "\$subref = \\$reftype$refstr";
+                    my $err = $@;
+                    debug 1, "eval error '$err'" if $err;
+                    debug 1, "subref is '$subref'";
+                    $node = $subref;
+                }
+                else {
+    
+                    my $l = $stacklevel;
+                    my $subref = undef;
+                    LEVELUP:
+                    while (my $pkg = caller($l++)) {
+                        debug 1, "looking up at lev $l for ref '$refstr' in '$pkg'";
+                        my $evalstr = "\$subref = \\$reftype$pkg\::$refstr";
+                        debug 1, "eval '$evalstr'";
+                        eval $evalstr;
+                        if (!$@) {
+                            $node = $subref;
+                            last LEVELUP;
+                        }
                     }
+                }
+                debug 1, "assgnd ref '$node' for '$reftype$refstr'";
+            }
+            elsif ( $node =~ m/ \A eval \s* { (.*) } \s* \z /xms ) {
+                my $evalstr = $1;
+                debug 1, "eval '$evalstr'";
+                my $result = eval $evalstr;
+                my $err = $@;
+                if ($err) {
+                    debug 1, "eval error '$err'";
+                }
+                else {
+                    debug 1, "assgnd ref '$node' for eval";
+                    $node = $result;
                 }
             }
 
-            debug 1, "assgnd ref '$node' for '$reftype$refstr'";
         }
     }
     return;
@@ -116,9 +137,8 @@ This reads a YAML (YAML::Syck) file that contains B<FormBuilder>
 config options and returns a hash to be fed to CGI::FormBuilder->new().
 
 Instead of the syntax read by CGI::FormBuilder::Source::File,
-it uses pure YAML syntax as read by YAML::Syck.  That means you
-fully specify the entire data structure -- the module doesn't
-do any fancy processing.  
+it uses YAML syntax as read by YAML::Syck.  That means you
+fully specify the entire data structure.
 
 LoadCode is enabled, so you can use YAML syntax for defining subroutines.
 This is convenient if you have a function that generates validation
@@ -135,12 +155,39 @@ subrefs, for example, I have one that can check profanity using Regexp::Common.
                 })->(shift);
             }
 
+=head1 POST PROCESSING
 
-Well there is one exception to the "pure YAML syntax", you can specify 
-references as string values that start with \&, \$, \@, or \% in the
+There are two exceptions to "pure YAML syntax" where this module
+does some post-processing of the result.
+
+=head2 REFERENCES (ala CGI::FormBuilder::Source::File)
+
+You can specify references as string values that start with 
+\&, \$, \@, or \% in the
 same way you can with CGI::FormBuilder::Source::File.  If you have
 a full direct package reference, it will look there, otherwise
 it will traverse up the caller stack and take the first it finds.
+
+For example, say your code serves multiple sites, and a menu 
+gets different options depending on the server name requested:
+
+ # in My::Funk:
+ our $food_options = {
+     www.meats.com   => [qw( beef    chicken horta   fish    )],
+     www.veggies.com => [qw( carrot  apple   quorn   radish  )],
+ };
+
+ # in source file:
+ options: \@{ $My::Funk::food_options->{ $ENV{SERVER_NAME} } }
+
+=head2 EVAL STRINGS
+
+You can specify an eval statement.  You could achieve the same
+example a different way:
+
+ options: eval { $My::Funk::food_options->{ $ENV{SERVER_NAME} }; }
+
+The cost either way is about the same -- the string is eval'd.
 
 =head1 EXAMPLE
 
@@ -184,7 +231,7 @@ it will traverse up the caller stack and take the first it finds.
                 - No
 
     test4:
-        options:    \&test4opts
+        options:    \@test4opts
         sort:       \&Someother::Package::sortopts
 
  validate:
@@ -195,7 +242,7 @@ it will traverse up the caller stack and take the first it finds.
     test3:
         - 0
         - 1
-    test4:  \&test4opts
+    test4:  \@test4opts
 
 You get the idea.  A bit more whitespace, but it works in a 
 standardized way.
@@ -222,7 +269,7 @@ L<CGI::FormBuilder>, L<CGI::FormBuilder::Source>
 
 =head1 REVISION
 
-$Id: YAML.pm 4 2006-11-07 17:00:00Z markle $
+$Id: YAML.pm 5 2006-11-08 17:00:00Z markle $
 
 =head1 AUTHOR
 

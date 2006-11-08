@@ -1,3 +1,11 @@
+1.0.5 2006-11-8
+
+    [bugfix]
+    - oops, the pattern was not quite right for ref assignments
+    
+    [feature]
+    - added support for eval { } as a value
+
 1.0.4 2006-11-7
 
     [bugfix]
