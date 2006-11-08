@@ -147,7 +147,7 @@ SEE ALSO
        CGI::FormBuilder, CGI::FormBuilder::Source
 
 REVISION
-       $Id: YAML.pm 5 2006-11-08 17:00:00Z markle $
+       $Id: YAML.pm 6 2006-11-08 17:00:01Z markle $
 
 AUTHOR
        Copyright (c) 2006 Mark Hedges <hedges@ucsd.edu>. All rights reserved.
