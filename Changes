@@ -1,3 +1,7 @@
+1.0.8 2007-11-17
+
+    Fix version in META.yml... I guess deleting file doesn't work.
+
 1.0.7 2007-11-17
 
     Fix [rt.cpan.org #30559]

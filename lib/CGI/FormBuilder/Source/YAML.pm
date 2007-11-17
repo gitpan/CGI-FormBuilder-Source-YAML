@@ -7,7 +7,7 @@ use YAML::Syck;
 
 use CGI::FormBuilder::Util;
 
-our $VERSION = '1.0007';
+our $VERSION = '1.0008';
 
 sub new {
     my $self  = shift;
