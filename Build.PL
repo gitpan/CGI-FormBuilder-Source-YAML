@@ -9,9 +9,7 @@ Module::Build->new(
         'CGI::FormBuilder'      => 3.02,
         'YAML::Syck'            => 0,
         'Test::More'            => 0,
-        'Test::Exception'       => 0,
-        'File::Basename'        => 0,
-        'File::Spec::Functions' => 0,
+        'FindBin'               => 0,
 	},
 )->create_build_script;
 

@@ -3,13 +3,13 @@
 # Copyright (c) 2006 Mark Hedges <hedges@ucsd.edu>
 
 use strict;
+use English '-no_match_vars';
+
 use blib;
 
-use Test::More tests => 7;
-use Test::Exception;
+use Test::More tests => 6;
 
-use File::Basename 'fileparse';
-use File::Spec::Functions;
+use FindBin;
 
 # use a BEGIN block so we print our plan before CGI::FormBuilder is loaded
 BEGIN {
@@ -29,19 +29,17 @@ $ENV{QUERY_STRING} = join('&', map "$_=$testqs->{$_}", keys %{$testqs});
 
 sub test4opts {
     return [
-        [ beef => "Where's the beef?" ],
-        [ chicken => "You coward!"    ],
-        [ horta => "I feel ... pain!" ],
+        [ beef => "Where's the beef?"   ],
+        [ chicken => "Cross the road!"  ],
+        [ horta => "They're eggs, Jim!" ],
     ];
 }
 
 my $form = undef;
 
-my ($file, $dir) = fileparse($0);
+my $sourcefile = "$FindBin::Bin/test.fb";
 
-my $sourcefile = File::Spec->catfile($dir, 'test.fb');
-
-lives_ok {
+eval {
     $form = CGI::FormBuilder->new(
         source  => {
             type    => 'YAML',
@@ -49,28 +47,17 @@ lives_ok {
             debug   => 0,
         },
     );
-} 'create form';
+};
+ok !$EVAL_ERROR, 'create form';
 
 my $ren = undef;
 
-lives_ok {
+eval {
     $ren = $form->render;
-} 'render form';
-
-my $compare = undef;
-{   local $/;
-    open my $compare_fh, '<', File::Spec->catfile($dir, 'test.html')
-        || die "Cannot open test output test.html for comparison";
-    $compare = <$compare_fh>;
-    close $compare_fh;
-}
-
-is( $ren, $compare, 'compare html output' );
+};
+ok !$EVAL_ERROR, 'render form';
 
 ok( $form->submitted, 'form submitted' );
 
 ok( $form->validate, 'form validate' );
 
-#open LAME, '>', '/tmp/lame';
-#print LAME $ren;
-#close LAME;

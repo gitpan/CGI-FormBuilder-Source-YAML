@@ -1,7 +1,6 @@
 lib/CGI/FormBuilder/Source/YAML.pm
 t/test.t
 t/test.fb
-t/test.html
 Build.PL
 MANIFEST
 README

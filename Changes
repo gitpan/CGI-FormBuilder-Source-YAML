@@ -1,3 +1,18 @@
+1.0.7 2007-11-17
+
+    Fix [rt.cpan.org #30559]
+    - no longer uses Test::Exception.
+
+    [bugfix]
+    - no longer tests specific html content
+        since this does not work with all versions of FB.
+        Will develop an html parser to verify elements.
+
+1.0.6 2006-11-?  
+
+    [released]
+    - umm
+
 1.0.5 2006-11-8
 
     [bugfix]

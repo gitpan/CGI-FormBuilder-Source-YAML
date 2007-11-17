@@ -7,8 +7,7 @@ use YAML::Syck;
 
 use CGI::FormBuilder::Util;
 
-our $REVISION = do { (my $r='$Revision: 6 $') =~ s/\D+//g; $r };
-our $VERSION = '1.0006';
+our $VERSION = '1.0007';
 
 sub new {
     my $self  = shift;
@@ -266,10 +265,6 @@ acceptable to YAML::Syck, I suppose it will die.
 =head1 SEE ALSO
 
 L<CGI::FormBuilder>, L<CGI::FormBuilder::Source>
-
-=head1 REVISION
-
-$Id: YAML.pm 6 2006-11-08 17:00:01Z markle $
 
 =head1 AUTHOR
 
